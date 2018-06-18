@@ -36,7 +36,10 @@ public:
   void Code(void);
   deque<bool> GetCodeFromTree(int letter);
   void SendBuffer(deque<bool> code);
+  void FlushBuffer(void);
   int GetBitsFromBuffer(int byteSize);
+  double CalcEntropy(void);
+  double AverageSize(void);
   static bool ComparaFrequency(BinNode *left, BinNode *right);
 };
 

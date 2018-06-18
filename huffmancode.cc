@@ -13,13 +13,12 @@ void HuffmanCode::Encode(string input, string output, uint alphabetSize)
   MakeHistogram();
   MakeNodes();
   BuildHuffmanTree();
+  Code();
+  flushBuffer();
   
-  
-  
-  //  fstream outputFile;
-  //  outputFile.write(m_ocorrencia,sizeof(int), sizeof(m_ocorrencia)/sizeof(int));
-  
-  
+  cout << "Tamanho médio antes = " << 8 << endl;
+  cout << "Entropia = " << CalcEntropy() << endl;
+  cout << "Tamanho médio = " << AverageSize() << endl;
 }
 
 void HuffmanCode::MakeHistogram(void)
@@ -172,28 +171,61 @@ deque<bool> HuffmanCode::GetCodeFromTree(int letter)
 void HuffmanCode::SendBuffer(deque<bool> code)
 {  
   m_buffer.insert(m_buffer.end(),code.begin(), code.end());
+}
+
+void HuffmanCode::FlushBuffer()
+{
+  m_buffer.push_back(true);
   
   while (m_buffer.size() >= 8) 
-    {
-      m_outputFile.put ((char) GetBitsFromBuffer(8)); 
-    }  
+    m_outputFile.put ((char) GetBitsFromBuffer(8));
+  
+  if (m_buffer.size() > 0)
+    m_outputFile.put ((char) GetBitsFromBuffer(m_buffer.size())); 
 }
 
 int HuffmanCode::GetBitsFromBuffer(int byteSize = 0)
 {
   if (byteSize == 0)
-      byteSize = m_buffer.size();
+    byteSize = m_buffer.size();
   
   int saida = 0;
   for (int i = 0; i < byteSize; i++) 
     {
       if(m_buffer[0] == true) 
-          saida += (0x80 >> i); 
+        saida += (0x80 >> i); 
       
       m_buffer.pop_front();
     }
   
   return saida;
+}
+
+double HuffmanCode::CalcEntropy()
+{
+  double entropy = 0, probability = 0;
+  
+  for (int i = 0; i < 256; i++)
+    {
+      if (m_frequency[i] == 0)
+        continue;
+      probability = (double)m_frequency[i] / m_numElem;
+      entropy += probability * log2(1.0 / probability);
+    }
+  return entropy;
+}
+
+double HuffmanCode::AverageSize()
+{
+  double average = 0, probability = 0;
+  for (uint i = 0; i < m_alphabetSize; i++)
+    {
+      if (m_frequency[i] == 0) continue;
+      probability = (double) m_frequency[i] / m_numElem;
+      average += probability * (double) GetCodeFromTree (i).size();
+    }
+  
+  return average;
 }
 
 bool HuffmanCode::ComparaFrequency(BinNode *left, BinNode *right)
